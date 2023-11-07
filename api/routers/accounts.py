@@ -23,6 +23,7 @@ from queries.accounts import (
 
 class AccountForm(BaseModel):
     email: str
+    username: str
     password: str
 
 
@@ -75,7 +76,8 @@ async def create_account(
     try:
         account_in = AccountIn(
             email=info.email,
-            password=info.password
+            username=info.username,
+            password=info.password,
         )
         account = accounts.create(account_in, hashed_password)
     except DuplicateAccountError:
@@ -83,7 +85,7 @@ async def create_account(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot create an account with those credentials",
         )
-    form = AccountForm(email=info.email, password=info.password)
+    form = AccountForm(email=info.email, username=info.username, password=info.password)
     token = await authenticator.login(response, request, form, accounts)
 
     return AccountToken(account=account, **token.dict())

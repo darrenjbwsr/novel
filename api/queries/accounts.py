@@ -14,12 +14,14 @@ class Error(BaseModel):
 
 class AccountIn(BaseModel):
     email: str
+    username: str
     password: str
 
 
 class AccountOut(BaseModel):
     id: str
     email: str
+    username: str
 
 
 class AccountOutWithPassword(AccountOut):
@@ -39,13 +41,14 @@ class AccountRepository(BaseModel):
                 result = db.execute(
                     """
                     INSERT INTO accounts
-                        (email, password)
+                        (email, username, password)
                     VALUES
-                        (%s, %s)
+                        (%s, %s, %s)
                     RETURNING id;
                     """,
                     [
                         info.email,
+                        info.username,
                         hashed_password,
                     ],
                 )
@@ -53,6 +56,7 @@ class AccountRepository(BaseModel):
                 return AccountOutWithPassword(
                     id=id,
                     email=info.email,
+                    username=info.username,
                     hashed_password=hashed_password,
                 )
 
@@ -64,6 +68,7 @@ class AccountRepository(BaseModel):
                         """
                          SELECT id
                             , email
+                            , username
                             , password
                             FROM accounts
                             ORDER BY id;
@@ -83,6 +88,7 @@ class AccountRepository(BaseModel):
                     """
                         SELECT id
                         , email
+                        , username
                         , password
                         FROM accounts
                         WHERE email = %s
@@ -98,7 +104,8 @@ class AccountRepository(BaseModel):
         return AccountOutWithPassword(
             id=record[0],
             email=record[1],
-            hashed_password=record[2]
+            username=record[2],
+            hashed_password=record[3]
         )
 
     def account_in_to_out(self, id: int, info: AccountIn):
